@@ -1,0 +1,12 @@
+{
+    "phase": "2D Cross-Dataset Validation",
+    "redteam_events_tested": 10,
+    "redteam_events_with_exact_auth_match": 10,
+    "exact_auth_match_rate_percent": 100.0,
+    "unmatched_redteam_ids": [],
+    "auth_rows_scanned": 30662354,
+    "process_rows_scanned": 12701194,
+    "process_context_events_found": 148,
+    "same_user_process_context_events": 4,
+    "process_context_window_seconds": 300
+}
