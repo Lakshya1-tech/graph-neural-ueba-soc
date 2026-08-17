@@ -1,0 +1,32 @@
+{
+    "dataset": "LANL auth.txt.gz",
+    "inspection_rows": 50000,
+    "schema": [
+        "time",
+        "src_user",
+        "dst_user",
+        "src_computer",
+        "dst_computer",
+        "auth_type",
+        "logon_type",
+        "auth_orientation",
+        "success"
+    ],
+    "unique_source_users_in_sample": 3657,
+    "unique_destination_users_in_sample": 4440,
+    "unique_source_computers_in_sample": 3117,
+    "unique_destination_computers_in_sample": 2093,
+    "minimum_timestamp": 1,
+    "maximum_timestamp": 474,
+    "missing_values_in_sample": {
+        "time": 0,
+        "src_user": 0,
+        "dst_user": 0,
+        "src_computer": 0,
+        "dst_computer": 0,
+        "auth_type": 28403,
+        "logon_type": 7687,
+        "auth_orientation": 0,
+        "success": 0
+    }
+}

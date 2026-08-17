@@ -1,0 +1,23 @@
+{
+    "dataset": "LANL proc.txt.gz",
+    "inspection_rows": 50000,
+    "schema": [
+        "time",
+        "user",
+        "computer",
+        "process",
+        "event_type"
+    ],
+    "unique_users_in_sample": 3008,
+    "unique_computers_in_sample": 2471,
+    "unique_processes_in_sample": 311,
+    "minimum_timestamp": 1,
+    "maximum_timestamp": 1384,
+    "missing_values_in_sample": {
+        "time": 0,
+        "user": 0,
+        "computer": 0,
+        "process": 0,
+        "event_type": 0
+    }
+}

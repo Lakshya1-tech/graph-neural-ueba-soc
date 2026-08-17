@@ -1,0 +1,16 @@
+{
+    "dataset": "LANL redteam.txt.gz",
+    "schema": [
+        "time",
+        "user",
+        "src_computer",
+        "dst_computer"
+    ],
+    "total_valid_events": 749,
+    "malformed_rows": 0,
+    "unique_users": 104,
+    "unique_source_computers": 4,
+    "unique_destination_computers": 301,
+    "minimum_timestamp": 150885,
+    "maximum_timestamp": 2557047
+}
