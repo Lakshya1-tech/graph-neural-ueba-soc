@@ -1,0 +1,19 @@
+{
+    "source_dataset": "LANL auth.txt.gz",
+    "number_of_days": 7,
+    "cutoff_seconds": 604800,
+    "total_valid_rows": 113699303,
+    "malformed_rows": 0,
+    "minimum_timestamp": 1,
+    "maximum_timestamp": 604799,
+    "rows_per_day": {
+        "0": 15740768,
+        "1": 17562411,
+        "2": 15585892,
+        "3": 13473124,
+        "4": 13398148,
+        "5": 18557382,
+        "6": 19381578
+    },
+    "output_directory": "C:\\Users\\ctosa\\OneDrive\\Desktop\\Graph_Neural_UEBA\\Data\\processed\\staging\\auth_daily"
+}
