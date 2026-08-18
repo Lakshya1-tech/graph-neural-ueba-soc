@@ -1,0 +1,215 @@
+{
+    "phase": "3E Processed Authentication Validation",
+    "validation_status": "PASS",
+    "input_directory": "/home/lakshya/ueba_data/auth_clean",
+    "days_validated": 7,
+    "output_sizes_mb": {
+        "0": 339.67,
+        "1": 379.46,
+        "2": 332.45,
+        "3": 282.19,
+        "4": 280.57,
+        "5": 402.46,
+        "6": 419.8
+    },
+    "schema": {
+        "expected": {
+            "time": "bigint",
+            "day_index": "int",
+            "second_of_day": "int",
+            "hour": "int",
+            "src_user": "string",
+            "src_user_account": "string",
+            "src_user_domain": "string",
+            "dst_user": "string",
+            "dst_user_account": "string",
+            "dst_user_domain": "string",
+            "src_computer": "string",
+            "dst_computer": "string",
+            "auth_type": "string",
+            "logon_type": "string",
+            "auth_orientation": "string",
+            "success": "string",
+            "success_flag": "int",
+            "is_failure": "int",
+            "is_logon": "int",
+            "is_logoff": "int",
+            "src_is_machine_account": "int",
+            "dst_is_machine_account": "int",
+            "same_user": "int",
+            "same_computer": "int",
+            "cross_host": "int"
+        },
+        "actual": {
+            "time": "bigint",
+            "day_index": "int",
+            "second_of_day": "int",
+            "hour": "int",
+            "src_user": "string",
+            "src_user_account": "string",
+            "src_user_domain": "string",
+            "dst_user": "string",
+            "dst_user_account": "string",
+            "dst_user_domain": "string",
+            "src_computer": "string",
+            "dst_computer": "string",
+            "auth_type": "string",
+            "logon_type": "string",
+            "auth_orientation": "string",
+            "success": "string",
+            "success_flag": "int",
+            "is_failure": "int",
+            "is_logon": "int",
+            "is_logoff": "int",
+            "src_is_machine_account": "int",
+            "dst_is_machine_account": "int",
+            "same_user": "int",
+            "same_computer": "int",
+            "cross_host": "int"
+        },
+        "missing_columns": [],
+        "unexpected_columns": [],
+        "type_mismatches": {},
+        "pass": true
+    },
+    "row_integrity": {
+        "staged_rows": 113699303,
+        "processed_rows": 113699303,
+        "removed_rows": 0,
+        "retention_rate_percent": 100.0,
+        "processed_rows_per_day": {
+            "0": 15740768,
+            "1": 17562411,
+            "2": 15585892,
+            "3": 13473124,
+            "4": 13398148,
+            "5": 18557382,
+            "6": 19381578
+        },
+        "daily_retention": {
+            "0": {
+                "staged_rows": 15740768,
+                "processed_rows": 15740768,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "1": {
+                "staged_rows": 17562411,
+                "processed_rows": 17562411,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "2": {
+                "staged_rows": 15585892,
+                "processed_rows": 15585892,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "3": {
+                "staged_rows": 13473124,
+                "processed_rows": 13473124,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "4": {
+                "staged_rows": 13398148,
+                "processed_rows": 13398148,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "5": {
+                "staged_rows": 18557382,
+                "processed_rows": 18557382,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            },
+            "6": {
+                "staged_rows": 19381578,
+                "processed_rows": 19381578,
+                "removed_rows": 0,
+                "retention_rate_percent": 100.0
+            }
+        },
+        "pass": true
+    },
+    "ranges": {
+        "minimum_time": 1,
+        "maximum_time": 604799,
+        "minimum_day_index": 0,
+        "maximum_day_index": 6,
+        "minimum_second_of_day": 0,
+        "maximum_second_of_day": 86399,
+        "minimum_hour": 0,
+        "maximum_hour": 23
+    },
+    "critical_null_counts": {
+        "time": 0,
+        "day_index": 0,
+        "second_of_day": 0,
+        "hour": 0,
+        "src_user": 0,
+        "src_computer": 0,
+        "dst_computer": 0
+    },
+    "invalid_binary_counts": {
+        "is_failure": 0,
+        "is_logon": 0,
+        "is_logoff": 0,
+        "src_is_machine_account": 0,
+        "dst_is_machine_account": 0,
+        "same_user": 0,
+        "same_computer": 0,
+        "cross_host": 0
+    },
+    "invalid_success_flag": 0,
+    "invalid_temporal_counts": {
+        "day_index": 0,
+        "second_of_day": 0,
+        "hour": 0
+    },
+    "logical_consistency_counts": {
+        "invalid_host_relationship": 0,
+        "failure_flag_mismatch_1": 0,
+        "failure_flag_mismatch_2": 0,
+        "simultaneous_logon_logoff": 0
+    },
+    "day_coverage": {
+        "expected_days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "present_days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "pass": true
+    },
+    "redteam_preservation": {
+        "events_in_window": 49,
+        "events_preserved": 49,
+        "preservation_rate_percent": 100.0,
+        "pass": true,
+        "details_csv": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/samples/redteam_processed_auth_matches.csv"
+    },
+    "checks": {
+        "physical_output": true,
+        "schema": true,
+        "day_coverage": true,
+        "row_integrity": true,
+        "critical_nulls": true,
+        "binary_fields": true,
+        "temporal_ranges": true,
+        "logical_consistency": true,
+        "redteam_preservation": true
+    }
+}

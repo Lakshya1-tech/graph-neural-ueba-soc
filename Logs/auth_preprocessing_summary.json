@@ -1,0 +1,70 @@
+{
+    "phase": "3B-3D Authentication Preprocessing",
+    "days_processed": 7,
+    "input_directory": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily",
+    "output_directory": "/home/lakshya/ueba_data/auth_clean",
+    "output_format": "Parquet",
+    "compression": "Snappy",
+    "generated_columns": [
+        "day_index",
+        "second_of_day",
+        "hour",
+        "src_user_account",
+        "src_user_domain",
+        "dst_user_account",
+        "dst_user_domain",
+        "success_flag",
+        "is_failure",
+        "is_logon",
+        "is_logoff",
+        "src_is_machine_account",
+        "dst_is_machine_account",
+        "same_user",
+        "same_computer",
+        "cross_host"
+    ],
+    "processed_days": [
+        {
+            "day": 0,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_00.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_00",
+            "output_size_mb": 339.67
+        },
+        {
+            "day": 1,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_01.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_01",
+            "output_size_mb": 379.46
+        },
+        {
+            "day": 2,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_02.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_02",
+            "output_size_mb": 332.45
+        },
+        {
+            "day": 3,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_03.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_03",
+            "output_size_mb": 282.19
+        },
+        {
+            "day": 4,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_04.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_04",
+            "output_size_mb": 280.57
+        },
+        {
+            "day": 5,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_05.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_05",
+            "output_size_mb": 402.46
+        },
+        {
+            "day": 6,
+            "input_file": "/mnt/c/Users/ctosa/OneDrive/Desktop/Graph_Neural_UEBA/Data/processed/staging/auth_daily/auth_day_06.csv.gz",
+            "output_directory": "/home/lakshya/ueba_data/auth_clean/day_06",
+            "output_size_mb": 419.8
+        }
+    ]
+}

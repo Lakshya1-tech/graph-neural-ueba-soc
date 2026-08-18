@@ -1,5 +1,6 @@
 import argparse
 import json
+import platform
 import shutil
 from pathlib import Path
 
@@ -28,6 +29,8 @@ STAGING_DIR = (
     / "auth_daily"
 )
 
+# Default output path.
+# On WSL we will override this using --output-dir.
 OUTPUT_DIR = (
     DATA_DIR
     / "processed"
@@ -114,9 +117,8 @@ def parse_arguments():
 
     parser = argparse.ArgumentParser(
         description=(
-            "Clean and normalize staged LANL "
-            "authentication data and write "
-            "optimized Parquet output."
+            "Clean and normalize staged LANL authentication "
+            "data and write optimized Parquet output."
         )
     )
 
@@ -133,6 +135,17 @@ def parse_arguments():
         help="Delete existing processed output before running."
     )
 
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=str(OUTPUT_DIR),
+        help=(
+            "Directory where processed Parquet data will be written. "
+            "For WSL, use native Linux storage such as "
+            "/home/lakshya/ueba_data/auth_clean"
+        )
+    )
+
     return parser.parse_args()
 
 
@@ -142,10 +155,10 @@ def parse_arguments():
 
 def normalize_required(column_name):
     """
-    Normalize identifiers that are essential for graph construction.
+    Normalize identifiers required for graph construction.
 
-    Empty values remain NULL so that records missing critical
-    graph identifiers can be removed later.
+    Missing/empty values remain NULL so that invalid graph
+    events can be filtered later.
     """
 
     normalized_value = F.upper(
@@ -165,9 +178,9 @@ def normalize_required(column_name):
 
 def normalize_optional(column_name):
     """
-    Normalize optional categorical values.
+    Normalize optional/categorical values.
 
-    Missing/empty values become UNKNOWN rather than being removed.
+    Missing values become UNKNOWN.
     """
 
     normalized_value = F.upper(
@@ -195,20 +208,14 @@ def add_user_components(
     prefix
 ):
     """
-    Split LANL identities such as:
+    Example:
 
-        U748@DOM1
+    U748@DOM1
 
-    into:
+    becomes:
 
-        account = U748
-        domain  = DOM1
-
-    Machine accounts such as:
-
-        C101$@DOM1
-
-    remain identifiable because the $ symbol is preserved.
+    account = U748
+    domain  = DOM1
     """
 
     account_component = F.regexp_extract(
@@ -247,13 +254,13 @@ def add_user_components(
 
 
 # =========================================================
-# CLEANING + STRUCTURAL FEATURE GENERATION
+# CLEANING + STRUCTURAL FIELD GENERATION
 # =========================================================
 
 def clean_auth_dataframe(dataframe):
 
     # -----------------------------------------------------
-    # 1. NORMALIZE IDENTIFIERS
+    # 1. NORMALIZE IDENTIFIERS / CATEGORICAL VALUES
     # -----------------------------------------------------
 
     dataframe = (
@@ -284,9 +291,7 @@ def clean_auth_dataframe(dataframe):
         )
         .withColumn(
             "auth_orientation",
-            normalize_optional(
-                "auth_orientation"
-            )
+            normalize_optional("auth_orientation")
         )
         .withColumn(
             "success",
@@ -295,7 +300,7 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 2. REMOVE RECORDS MISSING CRITICAL GRAPH DATA
+    # 2. REMOVE RECORDS MISSING CRITICAL GRAPH IDENTIFIERS
     # -----------------------------------------------------
 
     dataframe = dataframe.filter(
@@ -306,7 +311,7 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 3. TEMPORAL STRUCTURAL FEATURES
+    # 3. TEMPORAL STRUCTURAL FIELDS
     # -----------------------------------------------------
 
     dataframe = dataframe.withColumn(
@@ -334,7 +339,7 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 4. SPLIT USER ACCOUNT / DOMAIN
+    # 4. USER ACCOUNT / DOMAIN COMPONENTS
     # -----------------------------------------------------
 
     dataframe = add_user_components(
@@ -350,7 +355,7 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 5. AUTHENTICATION RESULT FLAGS
+    # 5. AUTH RESULT FLAGS
     # -----------------------------------------------------
 
     dataframe = dataframe.withColumn(
@@ -441,7 +446,7 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 8. USER RELATIONSHIP FLAG
+    # 8. RELATIONSHIP FLAGS
     # -----------------------------------------------------
 
     dataframe = dataframe.withColumn(
@@ -456,10 +461,6 @@ def clean_auth_dataframe(dataframe):
         )
         .cast("int")
     )
-
-    # -----------------------------------------------------
-    # 9. HOST RELATIONSHIP FLAGS
-    # -----------------------------------------------------
 
     dataframe = dataframe.withColumn(
         "same_computer",
@@ -488,48 +489,41 @@ def clean_auth_dataframe(dataframe):
     )
 
     # -----------------------------------------------------
-    # 10. FINAL COLUMN ORDER
+    # 9. FINAL COLUMN ORDER
     # -----------------------------------------------------
 
     dataframe = dataframe.select(
 
-        # Time
         "time",
         "day_index",
         "second_of_day",
         "hour",
 
-        # Source identity
         "src_user",
         "src_user_account",
         "src_user_domain",
 
-        # Destination identity
         "dst_user",
         "dst_user_account",
         "dst_user_domain",
 
-        # Computers
         "src_computer",
         "dst_computer",
 
-        # Authentication metadata
         "auth_type",
         "logon_type",
         "auth_orientation",
         "success",
 
-        # Authentication flags
         "success_flag",
         "is_failure",
+
         "is_logon",
         "is_logoff",
 
-        # Account flags
         "src_is_machine_account",
         "dst_is_machine_account",
 
-        # Relationship flags
         "same_user",
         "same_computer",
         "cross_host"
@@ -539,7 +533,7 @@ def clean_auth_dataframe(dataframe):
 
 
 # =========================================================
-# CALCULATE DIRECTORY SIZE
+# DIRECTORY SIZE
 # =========================================================
 
 def directory_size_mb(directory):
@@ -549,15 +543,35 @@ def directory_size_mb(directory):
     for file_path in directory.rglob("*"):
 
         if file_path.is_file():
+            total_bytes += file_path.stat().st_size
 
-            total_bytes += (
-                file_path.stat().st_size
+    return total_bytes / (1024 * 1024)
+
+
+# =========================================================
+# OUTPUT LOCATION CHECK
+# =========================================================
+
+def validate_output_location(output_dir):
+    """
+    Hadoop/Spark can have chmod problems when writing Parquet
+    from WSL directly to /mnt/c.
+
+    Prevent accidental large writes to Windows-mounted storage.
+    """
+
+    if platform.system() == "Linux":
+
+        output_string = str(output_dir)
+
+        if output_string.startswith("/mnt/"):
+
+            raise RuntimeError(
+                "\nINVALID WSL OUTPUT LOCATION\n\n"
+                "Do not write Spark Parquet output directly under /mnt/c.\n"
+                "Use native Linux storage instead, for example:\n\n"
+                "/home/lakshya/ueba_data/auth_clean\n"
             )
-
-    return (
-        total_bytes
-        / (1024 * 1024)
-    )
 
 
 # =========================================================
@@ -574,18 +588,32 @@ def main():
             "--days must be greater than zero."
         )
 
+    # Expand ~ and convert to absolute path.
+    output_dir = Path(
+        args.output_dir
+    ).expanduser().resolve()
+
+    validate_output_location(
+        output_dir
+    )
+
     print("=" * 75)
     print("LANL AUTHENTICATION PREPROCESSING PIPELINE")
     print("=" * 75)
 
     print(
-        f"\nInput directory : "
+        f"\nProject root    : "
+        f"{PROJECT_ROOT}"
+    )
+
+    print(
+        f"Input directory : "
         f"{STAGING_DIR}"
     )
 
     print(
         f"Output directory: "
-        f"{OUTPUT_DIR}"
+        f"{output_dir}"
     )
 
     print(
@@ -594,7 +622,7 @@ def main():
     )
 
     # -----------------------------------------------------
-    # 1. VERIFY DAILY STAGING FILES
+    # 1. VERIFY STAGING FILES
     # -----------------------------------------------------
 
     input_files = []
@@ -624,11 +652,11 @@ def main():
     )
 
     # -----------------------------------------------------
-    # 2. HANDLE EXISTING OUTPUT
+    # 2. PREPARE OUTPUT
     # -----------------------------------------------------
 
     if (
-        OUTPUT_DIR.exists()
+        output_dir.exists()
         and args.overwrite
     ):
 
@@ -638,21 +666,21 @@ def main():
         )
 
         shutil.rmtree(
-            OUTPUT_DIR
+            output_dir
         )
 
     elif (
-        OUTPUT_DIR.exists()
-        and any(OUTPUT_DIR.iterdir())
+        output_dir.exists()
+        and any(output_dir.iterdir())
         and not args.overwrite
     ):
 
         raise RuntimeError(
             "\nProcessed authentication output already exists.\n"
-            "Use --overwrite if you want to recreate it."
+            "Run again with --overwrite if you want to recreate it."
         )
 
-    OUTPUT_DIR.mkdir(
+    output_dir.mkdir(
         parents=True,
         exist_ok=True
     )
@@ -675,7 +703,7 @@ def main():
             "LANL_Auth_Preprocessing"
         )
 
-        # Two cores is deliberate for this laptop.
+        # Conservative configuration for local laptop.
         .master("local[2]")
 
         .config(
@@ -688,7 +716,6 @@ def main():
             "4"
         )
 
-        # Keep the local job conservative for a 16 GB machine.
         .config(
             "spark.driver.memory",
             "4g"
@@ -711,14 +738,10 @@ def main():
         f"{spark.version}"
     )
 
-    # -----------------------------------------------------
-    # 4. TRACK PROCESSED DAYS
-    # -----------------------------------------------------
-
     processed_days = []
 
     # -----------------------------------------------------
-    # 5. PROCESS ONE DAY AT A TIME
+    # 4. PROCESS EACH DAY
     # -----------------------------------------------------
 
     for day, input_file in enumerate(
@@ -732,12 +755,11 @@ def main():
         )
 
         print(
-            f"Input: "
-            f"{input_file.name}"
+            f"Input: {input_file.name}"
         )
 
         # -------------------------------------------------
-        # READ DAILY CSV.GZ
+        # READ DAILY STAGED CSV.GZ
         # -------------------------------------------------
 
         raw_df = (
@@ -771,18 +793,16 @@ def main():
         # CLEAN + GENERATE STRUCTURAL FIELDS
         # -------------------------------------------------
 
-        clean_df = (
-            clean_auth_dataframe(
-                raw_df
-            )
+        clean_df = clean_auth_dataframe(
+            raw_df
         )
 
         # -------------------------------------------------
-        # OUTPUT DIRECTORY FOR CURRENT DAY
+        # DAILY OUTPUT LOCATION
         # -------------------------------------------------
 
         output_day_dir = (
-            OUTPUT_DIR
+            output_dir
             / f"day_{day:02d}"
         )
 
@@ -793,7 +813,7 @@ def main():
             )
 
         # -------------------------------------------------
-        # WRITE AS PARQUET
+        # WRITE PARQUET
         # -------------------------------------------------
 
         print(
@@ -803,8 +823,6 @@ def main():
         (
             clean_df
 
-            # Two files per day keeps file count low
-            # while still enabling parallel reads later.
             .repartition(2)
 
             .write
@@ -824,13 +842,11 @@ def main():
         )
 
         # -------------------------------------------------
-        # CALCULATE OUTPUT SIZE
+        # OUTPUT SIZE
         # -------------------------------------------------
 
-        output_size = (
-            directory_size_mb(
-                output_day_dir
-            )
+        output_size = directory_size_mb(
+            output_day_dir
         )
 
         processed_days.append({
@@ -861,13 +877,13 @@ def main():
         )
 
     # -----------------------------------------------------
-    # 6. STOP SPARK
+    # 5. STOP SPARK
     # -----------------------------------------------------
 
     spark.stop()
 
     # -----------------------------------------------------
-    # 7. SAVE PIPELINE SUMMARY
+    # 6. SAVE SUMMARY
     # -----------------------------------------------------
 
     summary = {
@@ -882,7 +898,7 @@ def main():
             str(STAGING_DIR),
 
         "output_directory":
-            str(OUTPUT_DIR),
+            str(output_dir),
 
         "output_format":
             "Parquet",
@@ -933,7 +949,7 @@ def main():
         )
 
     # -----------------------------------------------------
-    # 8. COMPLETION MESSAGE
+    # 7. COMPLETION MESSAGE
     # -----------------------------------------------------
 
     print("\n" + "=" * 75)
@@ -943,6 +959,11 @@ def main():
     )
 
     print("=" * 75)
+
+    print(
+        f"\nProcessed data:\n"
+        f"{output_dir}"
+    )
 
     print(
         f"\nSummary written to:\n"
